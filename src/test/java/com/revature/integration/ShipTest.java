@@ -1,7 +1,5 @@
 package com.revature.integration;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
@@ -31,6 +29,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.revature.dao.ShipDAO;
 import com.revature.model.Ship;
 import com.revature.model.User;
+import com.revature.template.MessageTemplate;
+import com.revature.template.MessageTemplate;
 import com.revature.template.ShipTemplate;
 
 @ExtendWith(SpringExtension.class)
@@ -90,7 +90,7 @@ class ShipTest {
 	
 	@Test
 	@Order(2)
-	void testShip1ExistsInDB() throws Exception {
+	void testShip1_existsInDB() throws Exception {
 		MockHttpSession session = new MockHttpSession();
 		
 		User user = new User(1, "user", "pass");
@@ -107,6 +107,27 @@ class ShipTest {
 			.perform(builder)
 			.andExpect(MockMvcResultMatchers.status().isOk())
 			.andExpect(MockMvcResultMatchers.content().json(shipJson));
+	}
+
+	@Test
+	@Order(3)
+	void testShip1000_doesNotExistInDB() throws Exception {
+		MockHttpSession session = new MockHttpSession();
+		
+		User user = new User(1, "user", "pass");
+		session.setAttribute("loggedInUser", user);
+		
+		MockHttpServletRequestBuilder builder = MockMvcRequestBuilders
+				.get("/ship/1000")
+				.session(session); // used to mimick that we are logged in
+		
+		MessageTemplate expected = new MessageTemplate("Ship with id 1000 was not found");
+		String expectedJson = objectMapper.writeValueAsString(expected);
+		
+		this.mockMvc
+			.perform(builder)
+			.andExpect(MockMvcResultMatchers.status().isNotFound())
+			.andExpect(MockMvcResultMatchers.content().json(expectedJson));
 	}
 
 }
